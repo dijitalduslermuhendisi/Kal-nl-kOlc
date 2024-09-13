@@ -1,0 +1,52 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // LCD I2C adresi (0x27), 16 sütun ve 2 satır
+
+const int trigPin = 9;   // Trig pini
+const int echoPin = 10;  // Echo pini
+const float referenceDistance = 16.01; // Sabit referans mesafesi (cm)
+
+void setup() {
+  lcd.begin(16, 2);      // LCD'yi başlat, 16 sütun ve 2 satır olarak ayarla
+  lcd.backlight();       // LCD arka ışığını aç
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  lcd.setCursor(0, 0);
+  lcd.print("Kal.:");    // Başlangıçta ekrana yaz
+}
+
+void loop() {
+  long duration;
+  float distance, thickness;
+
+  // Trig pinine 10 mikro saniyelik bir darbe gönder
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Echo pininden gelen sinyal süresini ölç
+  duration = pulseIn(echoPin, HIGH);
+
+  // Mesafeyi hesapla (santimetre cinsinden)
+  distance = (duration * 0.034) / 2;
+
+  // Kalınlığı hesapla: referans mesafe - ölçülen mesafe
+  thickness = referenceDistance - distance;
+
+  // Kalınlık negatifse 0 olarak göster (cisim sensöre çok uzaktaysa)
+  if (thickness < 0) {
+    thickness = 0;
+  }
+
+  // Kalınlığı ekranda göster
+  lcd.setCursor(0, 1);
+  lcd.print("                ");  // Ekranı temizle
+  lcd.setCursor(0, 1);
+  lcd.print(thickness);
+  lcd.print(" cm");
+
+  delay(500);  // 0.5 saniye bekle
+}
